@@ -197,13 +197,46 @@ fn main() {
             .extend_from_slice(unsafe { &std::mem::transmute::<Scalar, [u8; 32]>(v) });
     });
 
-    g1_points.iter().for_each(|&v| {
-        g1_bytes.extend_from_slice(unsafe { &std::mem::transmute::<G1Affine, [u8; 104]>(v) });
-    });
+    if env::var("RISC0_NOMONT").is_ok() {
+        g1_points.iter().for_each(|&v| {
+            let mut bytes = v.to_uncompressed(); // includes montgomery_reduce
+            let inf_flag : u8 = (bytes[0] >> 6) & 1;
+            if 1u8 == inf_flag {
+                g1_bytes.extend_from_slice(unsafe { &std::mem::transmute::<G1Affine, [u8; 104]>(G1Affine::identity()) });
+            } else {
+                bytes[0] &= 0b0001_1111;
+                bytes.reverse();
+                g1_bytes.extend_from_slice(&bytes[48..96]);
+                g1_bytes.extend_from_slice(&bytes[0..48]);
+                g1_bytes.push(inf_flag);
+                g1_bytes.extend_from_slice(&[0u8; 7]);
+            }
+        });
+        g2_points.iter().for_each(|&v| {
+            let mut bytes = v.to_uncompressed(); // includes montgomery_reduce
+            let inf_flag : u8 = (bytes[0] >> 6) & 1;
+            if 1u8 == inf_flag {
+                g2_bytes.extend_from_slice( unsafe { &std::mem::transmute::<G2Affine, [u8; 200]>(G2Affine::identity()) });
+            } else {
+                bytes[0] &= 0b0001_1111;
+                bytes.reverse();
+                g2_bytes.extend_from_slice(&bytes[96..144]);
+                g2_bytes.extend_from_slice(&bytes[144..192]);
+                g2_bytes.extend_from_slice(&bytes[0..48]);
+                g2_bytes.extend_from_slice(&bytes[48..96]);
+                g2_bytes.push(inf_flag);
+                g2_bytes.extend_from_slice(&[0u8; 7]);
+            }
+        });
+    } else {
+        g1_points.iter().for_each(|&v| {
+            g1_bytes.extend_from_slice(unsafe { &std::mem::transmute::<G1Affine, [u8; 104]>(v) });
+        });
 
-    g2_points.iter().for_each(|&v| {
-        g2_bytes.extend_from_slice(unsafe { &std::mem::transmute::<G2Affine, [u8; 200]>(v) });
-    });
+        g2_points.iter().for_each(|&v| {
+            g2_bytes.extend_from_slice(unsafe { &std::mem::transmute::<G2Affine, [u8; 200]>(v) });
+        });
+    }
 
     let mut roots_of_unity_file = fs::OpenOptions::new()
         .create(true)

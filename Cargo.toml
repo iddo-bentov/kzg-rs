@@ -9,7 +9,7 @@ repository = "https://github.com/succinctlabs/kzg-rs"
 
 [dependencies]
 hex = { version = "0.4.3", default-features = false, features = ["alloc"] }
-bls12_381 = { git = "https://github.com/Wollac/bls12_381", branch = "release/v0.8.0", default-features = false, features = [
+bls12_381 = { git = "https://github.com/risc0/zkcrypto-bls12_381", tag = "bls12_381/v0.8.0-risczero.1", default-features = false, features = [
     "groups",
     "pairings",
     "alloc",
@@ -26,5 +26,5 @@ serde_derive = "1.0"
 serde = { version = "^1.0", features = ["derive"] }
 
 [build-dependencies]
-bls12_381 = { git = "https://github.com/Wollac/bls12_381", branch = "release/v0.8.0" }
+bls12_381 = { git = "https://github.com/risc0/zkcrypto-bls12_381", tag = "bls12_381/v0.8.0-risczero.1" }
 hex = "0.4.3"
